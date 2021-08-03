@@ -136,21 +136,48 @@ y_train = torch.FloatTensor([[152], [185], [180], [196], [142]])
 model = nn.Linear(3,1)
 ```
 
+위 torch.nn.Linear 인자로 3,1을 사용 3개의 입력x에 대해 하나의 출력 y을 가지므로 입력은 3차원 출력은 1차원인수 사용
 
+```py
+print(list(model.parameters()))
+```
 
+```
+출력값
+[Parameter containing:
+tensor([[ 0.2975, -0.2548, -0.1119]], requires_grad=True), Parameter containing:
+tensor([0.2710], requires_grad=True)]
+```
 
+첫번째 출력되는 것이 3개의 w이고 두번째 출력값은 b에 해당된다 
+두값은 모두 현재는 랜덤 초기화가 되어져 있습니다 
 
+이제 옵티마이저를 정의 model.parameters()를 사용하여 3개의 w와 b를전달 학습률은 0.00001로 정의(코드론 1e-5로 표기)
 
+```py
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-5) 
 
+nb_epochs = 2000
+for epoch in range(nb_epochs+1):
 
+    # H(x) 계산
+    prediction = model(x_train)
+    # model(x_train)은 model.forward(x_train)와 동일함.
 
+    # cost 계산
+    cost = F.mse_loss(prediction, y_train) # <== 파이토치에서 제공하는 평균 제곱 오차 함수
 
+    # cost로 H(x) 개선하는 부분
+    # gradient를 0으로 초기화
+    optimizer.zero_grad()
+    # 비용 함수를 미분하여 gradient 계산
+    cost.backward()
+    # W와 b를 업데이트
+    optimizer.step()
 
-
-
-
-
-
-
-
-
+    if epoch % 100 == 0:
+    # 100번마다 로그 출력
+      print('Epoch {:4d}/{} Cost: {:.6f}'.format(
+          epoch, nb_epochs, cost.item()
+      ))
+```
