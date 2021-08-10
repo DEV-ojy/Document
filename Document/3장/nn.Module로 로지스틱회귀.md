@@ -1,3 +1,5 @@
+# nn.Module로 구현하는 로지스틱 회귀
+
 ```py
 import torch
 import torch.nn as nn
