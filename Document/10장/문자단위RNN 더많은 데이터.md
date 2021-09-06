@@ -140,3 +140,32 @@ tensor([ 1,  2,  5, 21, 14,  2, 16, 19,  9, 12])
 ```
 
 위 레이블 시퀀스는 f you want에 해당됩니다. 이제 모델을 설계합니다
+
+
+## 2.모델 구현하기 
+
+모델은 앞서 실습한 문자 단위 RNN 챕터와 거의 동일합니다 다만, 이번에는 은닉층을 두개쌓을겁니다 
+
+```py
+class Net(torch.nn.Module):
+    def __init__(self, input_dim, hidden_dim, layers): # 현재 hidden_size는 dic_size와 같음
+        super(Net, self).__init__()
+        self.rnn = torch.nn.RNN(input_dim, hidden_dim, num_layers=layers, batch_first=True)
+        self.fc = torch.nn.Linear(hidden_dim, hidden_dim, bias=True)
+
+    def forward(self, x):
+        x, _status = self.rnn(x)
+        x = self.fc(x)
+        return x
+         
+net = Net(dic_size, hidden_size, 2) # 이번에는 층을 두 개 쌓습니다.         
+```
+
+nn.RNN() 안에 num_layers라는 인자를 사용합니다 이는 은닉층을 몇 개 쌓을 것인지를 의미합니다 모델 선언 시 layers라는 
+인자에 2를 전달하여 은닉층을 두 개 쌓습니다 비용 함수와 옵티마이저를 선언합니다
+
+```py
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = optim.Adam(net.parameters(), learning_rate)
+```
+이제 모델에 입력을 넣어서 출력의 크기르 확인해봅시다 
