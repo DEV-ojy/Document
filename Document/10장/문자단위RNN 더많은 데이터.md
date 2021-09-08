@@ -169,3 +169,64 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = optim.Adam(net.parameters(), learning_rate)
 ```
 이제 모델에 입력을 넣어서 출력의 크기르 확인해봅시다 
+
+
+```py
+outputs = net(X)
+print(outputs.shape) # 3차원 텐서
+```
+```
+torch.Size([170, 10, 25])
+```
+
+(170,10,25)의 크기를 가지는데 각각 배치 차원, 시점,출력의 크기입니다 나중에 정확도를 측정할 때는 이를 모두 펼쳐서 계산하게
+되는데 이대는 view를 사욯하여 배치 차원과 시점 차원을하나로 만듭니다 
+
+```py
+print(outputs.view(-1, dic_size).shape) # 2차원 텐서로 변환.
+```
+```
+torch.Size([1700, 25])
+```
+
+차원이 (1700,25)가 된것을 볼 수 있습니다 이제 레이블 데이터의 크기를 다시 복습해 봅시다 
+
+```py
+print(Y.shape)
+print(Y.view(-1).shape)
+```
+```
+torch.Size([170, 10])
+torch.Size([1700])
+```
+
+레이블 데이터는 (170,10)의 크기를 가지는데, 마찬가지로 나중에 정확도를 측정할때는 이걸 펼쳐서 계산할 예정입니다
+이 경우 (1700)의 크기를 가지게 됩니다 이제 옵티마이저와 손실 함수를 정의합니다 
+
+```py
+for i in range(100):
+    optimizer.zero_grad()
+    outputs = net(X) # (170, 10, 25) 크기를 가진 텐서를 매 에포크마다 모델의 입력으로 사용
+    loss = criterion(outputs.view(-1, dic_size), Y.view(-1))
+    loss.backward()
+    optimizer.step()
+
+    # results의 텐서 크기는 (170, 10)
+    results = outputs.argmax(dim=2)
+    predict_str = ""
+    for j, result in enumerate(results):
+        if j == 0: # 처음에는 예측 결과를 전부 가져오지만
+            predict_str += ''.join([char_set[t] for t in result])
+        else: # 그 다음에는 마지막 글자만 반복 추가
+            predict_str += char_set[result[-1]]
+
+    print(predict_str)
+```
+```
+hahhahrrhhhahaahahhhhahhahhhhhhhhhahhahhhhhhhahrahhahhhahhhhaahhhrhahhahahhahhhh
+qhhhhaahhhhhhhahhhhahhhhahhhrhhhhhhahhhahahhhhaahahhahhhhaahahhahahhhahhhhhhahhahahhhhhhhahhhhahhhaa
+... 중략 ...
+p you want to build a ship, don't drum up people together to collect wood and don't assign them tasks and work, but rather teach them to long for the endless immensity of the sea.
+```
+
+처음에는 이상한 예측을 하지만 마지막 에포크에서는 꽤 정호가한 문자를 생성하는 것을 볼수있습니다 
