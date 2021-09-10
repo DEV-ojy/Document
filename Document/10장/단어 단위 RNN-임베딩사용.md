@@ -88,3 +88,56 @@ print(Y)
 tensor([[7, 4, 3, 1, 6, 5]]) # Repeat is the best medicine for을 의미
 tensor([[4, 3, 1, 6, 5, 2]]) # is the best medicine for memory을 의미
 ```
+
+
+## 모델 구현하기 
+
+이제 모델을 설계합니다 이전 모델들과 달라진 점은 임베딩 층을 추가했다는 점입니다
+파이토치에서는 nn.Embedding()을 사용해서 임베딩 층을 구현합니다 
+임베딩층은 크게 두가지 인자를 받는데 첫번째는 단어장의 크기이며 두번째는 벡터의 차원입니다 '
+
+```py
+class Net(nn.Module):
+    def __init__(self, vocab_size, input_size, hidden_size, batch_first=True):
+        super(Net, self).__init__()
+        self.embedding_layer = nn.Embedding(num_embeddings=vocab_size, # 워드 임베딩
+                                            embedding_dim=input_size)
+        self.rnn_layer = nn.RNN(input_size, hidden_size, # 입력 차원, 은닉 상태의 크기 정의
+                                batch_first=batch_first)
+        self.linear = nn.Linear(hidden_size, vocab_size) # 출력은 원-핫 벡터의 크기를 가져야함. 또는 단어 집합의 크기만큼 가져야함.
+
+    def forward(self, x):
+        # 1. 임베딩 층
+        # 크기변화: (배치 크기, 시퀀스 길이) => (배치 크기, 시퀀스 길이, 임베딩 차원)
+        output = self.embedding_layer(x)
+        # 2. RNN 층
+        # 크기변화: (배치 크기, 시퀀스 길이, 임베딩 차원)
+        # => output (배치 크기, 시퀀스 길이, 은닉층 크기), hidden (1, 배치 크기, 은닉층 크기)
+        output, hidden = self.rnn_layer(output)
+        # 3. 최종 출력층
+        # 크기변화: (배치 크기, 시퀀스 길이, 은닉층 크기) => (배치 크기, 시퀀스 길이, 단어장 크기)
+        output = self.linear(output)
+        # 4. view를 통해서 배치 차원 제거
+        # 크기변화: (배치 크기, 시퀀스 길이, 단어장 크기) => (배치 크기*시퀀스 길이, 단어장 크기)
+        return output.view(-1, output.size(2))v
+```
+
+이제 모델을 위해 하이퍼파라미터를 설정 
+
+```py
+# 하이퍼 파라미터
+vocab_size = len(word2index)  # 단어장의 크기는 임베딩 층, 최종 출력층에 사용된다. <unk> 토큰을 크기에 포함한다.
+input_size = 5  # 임베딩 된 차원의 크기 및 RNN 층 입력 차원의 크기
+hidden_size = 20  # RNN의 은닉층 크기
+```
+
+모델을 생성합니다 
+
+```py
+# 모델 생성
+model = Net(vocab_size, input_size, hidden_size, batch_first=True)
+# 손실함수 정의
+loss_function = nn.CrossEntropyLoss() # 소프트맥스 함수 포함이며 실제값은 원-핫 인코딩 안 해도 됨.
+# 옵티마이저 정의
+optimizer = optim.Adam(params=model.parameters())
+```
