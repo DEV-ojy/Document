@@ -273,3 +273,21 @@ for e in range(1, EPOCHS+1):
 [Epoch: 9] val loss :  0.34 | val accuracy : 86.92
 [Epoch: 10] val loss :  0.37 | val accuracy : 87.24  
 ``` 
+```py
+model.load_state_dict(torch.load('./snapshot/txtclassification.pt'))
+test_loss, test_acc = evaluate(model, test_iter)
+print('테스트 오차: %5.2f | 테스트 정확도: %5.2f' % (test_loss, test_acc))
+```
+```
+테스트 오차:  0.30 | 테스트 정확도: 87.17  
+```
+  
+## 4. 마지막 time step의 hidden state 가져오는 것 이해하기  
+  
+위에서 GRU의 마지막 time-step의 hidden state를 가져오는 코드를 보겠습니다  
+```py
+# GRU의 리턴값은 (배치 크기, 시퀀스 길이, 은닉 상태의 크기)
+x, _ = self.gru(x, h_0)  
+# (배치 크기, 은닉 상태의 크기)의 텐서로 크기가 변경됨. 즉, 마지막 time-step의 은닉 상태만 가져온다.
+h_t = x[:,-1,:] 
+```  
