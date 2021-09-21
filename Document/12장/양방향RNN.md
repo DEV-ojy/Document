@@ -90,3 +90,47 @@ print(vars(train_data.examples[0])['text'])
 , 'the', 'preacher', 'at', 'the', 'mosque', 'in', 'the', 'town', 'of', 'qaim', ',', 'near', 'the', 
 'syrian','border', '.']
 ```
+
+첫번째 레이블은 udtags입니다 우리가 사용할 레이블입니다 
+
+```py
+# 첫번째 훈련 샘플의 udtags 필드
+print(vars(train_data.examples[0])['udtags'])
+```
+```
+['PROPN', 'PUNCT', 'PROPN', 'PUNCT', 'ADJ', 'NOUN', 'VERB', 'PROPN', 'PROPN', 'PROPN', 
+'PUNCT', 'PROPN','PUNCT', 'DET', 'NOUN', 'ADP', 'DET', 'NOUN', 'ADP', 'DET', 'NOUN', 
+'ADP', 'PROPN', 'PUNCT', 'ADP', 'DET','ADJ', 'NOUN', 'PUNCT']
+```
+두번째 레이블은 ptbdtags입니다 여기서는 사용하지 않을 레이블입니다 
+```py
+# 첫번째 훈련 샘플의 ptbdtags 필드
+print(vars(train_data.examples[0])['ptbtags'])
+```
+```
+['NNP', 'HYPH', 'NNP', ':', 'JJ', 'NNS', 'VBD', 'NNP', 'NNP', 'NNP', 'HYPH', 'NNP', 
+',', 'DT', 'NN', 'IN', 'DT', 'NN', 'IN', 'DT', 'NN', 'IN', 'NNP', ',', 'IN', 'DT', 'JJ', 'NN', '.']
+```
+
+### 3.단어 집합만들기 
+
+이제 단어 집합을 생성해보겠습니다 그리고 단어 집합을 생성 시에 사전 훈련된 워드 임베딩인 GloVe를 사용해보겠습니다
+```py
+# 최소 허용 빈도
+MIN_FREQ = 5
+
+# 사전 훈련된 워드 임베딩 GloVe 다운로드
+TEXT.build_vocab(train_data, min_freq = MIN_FREQ, vectors = "glove.6B.100d")
+UD_TAGS.build_vocab(train_data)
+PTB_TAGS.build_vocab(train_data)
+```
+상위 빈도수 20개의 단어만 출력해봅시다  .vocab.freqs.most_common(20)를 통해 출력 가능합니다 
+```py
+# 상위 빈도수 20개 단어
+print(TEXT.vocab.freqs.most_common(20))
+```
+```
+[('the', 9076), ('.', 8640), (',', 7021), ('to', 5137), ('and', 5002), ('a', 3782), ('of', 3622), 
+('i', 3379), ('in', 3112), ('is', 2239), ('you', 2156), ('that', 2036), ('it', 1850), ('for', 1842), 
+('-', 1426), ('have', 1359), ('"', 1296), ('on', 1273), ('was', 1244), ('with', 1216)]
+```
