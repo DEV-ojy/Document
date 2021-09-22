@@ -134,3 +134,69 @@ print(TEXT.vocab.freqs.most_common(20))
 ('i', 3379), ('in', 3112), ('is', 2239), ('you', 2156), ('that', 2036), ('it', 1850), ('for', 1842), 
 ('-', 1426), ('have', 1359), ('"', 1296), ('on', 1273), ('was', 1244), ('with', 1216)]
 ```
+
+영어에서는 보통 the가 빈도수가 가장 많습니다 토치텍스트는 기본적으로 빈도수가 가장 높은 단어부터 작은 숫자를 부여합니다 물론,<unk>는 0번 <pad>는 1번으로 자동으로 부여되므로 제외입니다 
+  
+상위 정수 인덱스를 가진 10개의 단어를 출력합니다 다시 말해 0번부터9번까지의 단어를 출력해보겠습니다 
+  
+```py
+# 상위 정수 인덱스 단어 10개 출력
+print(TEXT.vocab.itos[:10]) 
+```
+```
+['<unk>', '<pad>', 'the', '.', ',', 'to', 'and', 'a', 'of', 'i']
+```
+이제 레이블의 단어 집합에 대해서 빈도수가 가장 높은 단어들과 그 빈도수를 출력해 보겠습니다   
+```py
+# 상위 빈도순으로 udtags 출력
+print(UD_TAGS.vocab.freqs.most_common())
+``` 
+```
+[('NOUN', 34781), ('PUNCT', 23679), ('VERB', 23081), ('PRON', 18577), ('ADP', 17638), ('DET', 16285), 
+('PROPN', 12946), ('ADJ', 12477), ('AUX', 12343), ('ADV', 10548), ('CCONJ', 6707), ('PART', 5567),
+('NUM', 3999), ('SCONJ', 3843), ('X', 847), ('INTJ', 688), ('SYM', 599)]  
+```
+  
+상위 정수 인덱스를 가진 10개의 단어를 출력합니다. 다시 말해 0번부터 9번까지의 단어를 출력해보겠습니다
+```py
+# 상위 정수 인덱스 순으로 출력
+print(UD_TAGS.vocab.itos)
+```
+```
+['<pad>', 'NOUN', 'PUNCT', 'VERB', 'PRON', 'ADP', 'DET', 'PROPN', 'ADJ', 'AUX', 
+  'ADV', 'CCONJ', 'PART', 'NUM', 'SCONJ', 'X', 'INTJ', 'SYM']
+```  
+레이블에 속한 단어들의 분포를 출력해보겠습니다 
+```py
+def tag_percentage(tag_counts): # 태그 레이블의 분포를 확인하는 함수
+    total_count = sum([count for tag, count in tag_counts])
+    tag_counts_percentages = [(tag, count, count/total_count) for tag, count in tag_counts]
+
+    return tag_counts_percentages
+  
+  
+print("Tag  Occurences Percentage\n")
+for tag, count, percent in tag_percentage(UD_TAGS.vocab.freqs.most_common()):
+    print(f"{tag}\t{count}\t{percent*100:4.1f}%")  
+``` 
+```
+Tag  Occurences Percentage
+
+NOUN    34781   17.0%
+PUNCT   23679   11.6%
+VERB    23081   11.3%
+PRON    18577    9.1%
+ADP 17638    8.6%
+DET 16285    8.0%
+PROPN   12946    6.3%
+ADJ 12477    6.1%
+AUX 12343    6.0%
+ADV 10548    5.2%
+CCONJ   6707     3.3%
+PART    5567     2.7%
+NUM 3999     2.0%
+SCONJ   3843     1.9%
+X   847  0.4%
+INTJ    688  0.3%
+SYM 599  0.3%
+```
