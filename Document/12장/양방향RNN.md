@@ -250,3 +250,63 @@ tensor([[ 732,  167,    2,  ...,    2,   59,  668],
         [   1,    1,    1,  ...,    1,    1,    1],
         [   1,    1,    1,  ...,    1,    1,    1]], device='cuda:0')
 ```  
+
+## 3.모델 구현하기 
+ 
+이제 모델을 구현해봅시다 기본적으로 다대다 RNN을 사용할텐데 일단 양방향 여부와 층의 개수는 변수로 두겠습니다 
+ 
+```py
+# 이번 모델에서는 batch_first=True를 사용하지 않으므로 배치 차원이 맨 앞이 아님.
+class RNNPOSTagger(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, n_layers, bidirectional, dropout): 
+        super().__init__()
+
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.rnn = nn.LSTM(embedding_dim, hidden_dim, num_layers = n_layers, bidirectional = bidirectional)
+        self.fc = nn.Linear(hidden_dim * 2 if bidirectional else hidden_dim, output_dim)        
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, text):
+        # text = [sent len, batch size]
+        embedded = self.dropout(self.embedding(text))
+
+        # embedded = [sent len, batch size, emb dim]
+        outputs, (hidden, cell) = self.rnn(embedded)
+
+        # output = [sent len, batch size, hid dim * n directions]
+        # hidden/cell = [n layers * n directions, batch size, hid dim]
+        predictions = self.fc(self.dropout(outputs))
+
+        # predictions = [sent len, batch size, output dim]
+        return predictions
+```
+실제 클래스로부터 모덱 객체로 생성 시에 양방향 여부를 True로 주고 층의 개수를 2개로 합니다 
+```py
+INPUT_DIM = len(TEXT.vocab)
+EMBEDDING_DIM = 100
+HIDDEN_DIM = 128
+OUTPUT_DIM = len(UD_TAGS.vocab)
+N_LAYERS = 2
+BIDIRECTIONAL = True
+DROPOUT = 0.25
+
+model = RNNPOSTagger(INPUT_DIM, 
+                     EMBEDDING_DIM, 
+                     HIDDEN_DIM, 
+                     OUTPUT_DIM, 
+                     N_LAYERS, 
+                     BIDIRECTIONAL, 
+                     DROPOUT)
+```
+파라리터 개수를 출력해보겠습니다
+```py
+# 파라미터 개수 출력
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+print(f'The model has {count_parameters(model):,} trainable parameters')
+```
+```
+The model has 1,027,510 trainable parameters
+``` 
+총 102만 7천 5백 10개의 파라미터가 있습니다 
