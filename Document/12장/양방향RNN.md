@@ -362,3 +362,33 @@ tensor([[ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000],
         [ 0.1519,  0.4712,  0.0895,  ..., -0.4702, -0.3127,  0.1078]])
 ```
 PAD 토큰과 UNK 토큰의 임베딩 벡터값이 0인것을 볼 수 있습니다 사전 훈련된 워드 임베딩을 사용할 준비가 되었습니다
+
+ 
+## 5.옵티마이저와 비용 함수 구현하기 
+옵티마이저 설계 전에 레이블 데이터의 패딩 토큰의 인덱스도 확인해봅시다
+ 
+```py
+TAG_PAD_IDX = UD_TAGS.vocab.stoi[UD_TAGS.pad_token]
+print(TAG_PAD_IDX)
+```
+```
+0
+```
+0인 것을 확인할 수 있습니다 이를 하는 이유는 아래 비용 함수를 선택할 때 인자로 주기 위함입니다 
+이제 옵티마이저를 설정합니다 여기서는 Adam을 택했습니다
+```py
+optimizer = optim.Adam(model.parameters())
+```
+```py
+criterion = nn.CrossEntropyLoss(ignore_index = TAG_PAD_IDX)
+```
+```py
+model = model.to(device)
+criterion = criterion.to(device)
+```
+```py
+prediction = model(batch.text)
+```
+
+
+ 
