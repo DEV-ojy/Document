@@ -379,16 +379,54 @@ print(TAG_PAD_IDX)
 ```py
 optimizer = optim.Adam(model.parameters())
 ```
+비용 함수로 크로스엔트로피 함수를 선택합니다 이떄 레이블 데이터의 패딩 토큰은 비용함수의 연산에 포함시키지도 않도록
+레이블 데이터의 패딩 토큰을 무시하라고 기재해줍니다 
 ```py
 criterion = nn.CrossEntropyLoss(ignore_index = TAG_PAD_IDX)
 ```
+현재 GPU를 사용 중일때 GPU 연산을 할 수 있도록 지정해줍니다  
 ```py
 model = model.to(device)
 criterion = criterion.to(device)
 ```
+아직 모델은 훈련되지 않은 상태이지만 모델에 입력값을 넣어 출력의 크기를 확인해볼까요? 여기서 넣는 입력값은 앞에서 꺼내두었던 천번째 배치입니다  
 ```py
 prediction = model(batch.text)
 ```
-
-
+예측값의 크기는 다음과 같습니다 
  
+```py
+prediction.shape
+``` 
+
+```
+torch.Size([46,64,18])
+```
+46 × 64 × 18은 각각 (첫번째 배치의 시퀀스 길이 × 배치 크기 × 레이블 단어장의 크기)에 해당됩니다 주의할 점은 헌재는
+batch_first를 해주지 않아 배치 크기가 맨 앞 차원이 아니라는 점입니다 또한 46은 첫번째 시퀀스 길이일뿐, 다른 배치들은
+시퀀스 길이가 다를 수 있습니다  
+
+이제 예측값에 대해서 시퀀스 길이와 배치길이를 모두 펼쳐주는 작업을 해보겠습니다  
+```py 
+prediction = prediction.view(-1, prediction.shape[-1])
+prediction.shape
+``` 
+``` 
+torch.Size([2944, 18]) 
+``` 
+크기가 (2,944 × 18)이 됩니다 이번에는 첫번째 배치의 레이블 데이터의 크기를 보겠습니다
+```py 
+batch.udtags.shape 
+``` 
+``` 
+torch.Size([46, 64]) 
+```
+46 × 64는 (첫번째 배치의 시퀀스 길이 × 배치 크기)에 해당됩니다 이를 펼쳐보겠습니다
+```py
+batch.udtags.view(-1).shape 
+```   
+```
+torch.Size([2944])
+``` 
+
+2,944의 크기를 가지게 됩니다 
