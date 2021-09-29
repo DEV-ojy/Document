@@ -430,3 +430,147 @@ torch.Size([2944])
 ``` 
 
 2,944의 크기를 가지게 됩니다 
+
+ 
+## 6.훈련과 평가하기 
+ 
+```py
+def categorical_accuracy(preds, y, tag_pad_idx):
+    """
+    미니 배치에 대한 정확도 출력
+    """
+    max_preds = preds.argmax(dim = 1, keepdim = True) # get the index of the max probability
+    non_pad_elements = (y != tag_pad_idx).nonzero()
+    correct = max_preds[non_pad_elements].squeeze(1).eq(y[non_pad_elements])
+    return correct.sum() / torch.FloatTensor([y[non_pad_elements].shape[0]])
+```
+
+```py
+def train(model, iterator, optimizer, criterion, tag_pad_idx):
+
+    epoch_loss = 0
+    epoch_acc = 0
+
+    model.train()
+
+    for batch in iterator:
+
+        text = batch.text
+        tags = batch.udtags
+
+        optimizer.zero_grad()
+
+        #text = [sent len, batch size]     
+        predictions = model(text)
+
+        #predictions = [sent len, batch size, output dim]
+        #tags = [sent len, batch size]
+        predictions = predictions.view(-1, predictions.shape[-1]) # #predictions = [sent len * batch size, output dim]
+        tags = tags.view(-1) # tags = [sent len * batch_size]
+
+        #predictions = [sent len * batch size, output dim]
+        #tags = [sent len * batch size]
+        loss = criterion(predictions, tags)
+
+        acc = categorical_accuracy(predictions, tags, tag_pad_idx)
+
+        loss.backward()
+
+        optimizer.step()
+
+        epoch_loss += loss.item()
+        epoch_acc += acc.item()
+
+    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+``` 
+
+```py
+def evaluate(model, iterator, criterion, tag_pad_idx):
+
+    epoch_loss = 0
+    epoch_acc = 0
+
+    model.eval()
+
+    with torch.no_grad():
+
+        for batch in iterator:
+
+            text = batch.text
+            tags = batch.udtags
+
+            predictions = model(text)
+
+            predictions = predictions.view(-1, predictions.shape[-1])
+            tags = tags.view(-1)
+
+            loss = criterion(predictions, tags)
+
+            acc = categorical_accuracy(predictions, tags, tag_pad_idx)
+
+            epoch_loss += loss.item()
+            epoch_acc += acc.item()
+
+    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+```
+
+```py
+N_EPOCHS = 10
+
+best_valid_loss = float('inf')
+
+for epoch in range(N_EPOCHS):
+
+    train_loss, train_acc = train(model, train_iterator, optimizer, criterion, TAG_PAD_IDX)
+    valid_loss, valid_acc = evaluate(model, valid_iterator, criterion, TAG_PAD_IDX)
+
+    if valid_loss < best_valid_loss:
+        best_valid_loss = valid_loss
+        torch.save(model.state_dict(), 'tut1-model.pt')
+
+    print(f'Epoch: {epoch+1:02}')
+    print(f'\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%')
+    print(f'\t Val. Loss: {valid_loss:.3f} |  Val. Acc: {valid_acc*100:.2f}%')
+```
+
+```
+Epoch: 01
+    Train Loss: 1.097 | Train Acc: 65.92%
+     Val. Loss: 0.656 |  Val. Acc: 79.76%
+Epoch: 02
+    Train Loss: 0.387 | Train Acc: 87.82%
+     Val. Loss: 0.535 |  Val. Acc: 83.43%
+Epoch: 03
+    Train Loss: 0.305 | Train Acc: 90.19%
+     Val. Loss: 0.491 |  Val. Acc: 84.50%
+Epoch: 04
+    Train Loss: 0.264 | Train Acc: 91.40%
+     Val. Loss: 0.461 |  Val. Acc: 85.26%
+Epoch: 05
+    Train Loss: 0.238 | Train Acc: 92.17%
+     Val. Loss: 0.444 |  Val. Acc: 85.37%
+Epoch: 06
+    Train Loss: 0.220 | Train Acc: 92.74%
+     Val. Loss: 0.433 |  Val. Acc: 85.98%
+Epoch: 07
+    Train Loss: 0.203 | Train Acc: 93.28%
+     Val. Loss: 0.420 |  Val. Acc: 86.21%
+Epoch: 08
+    Train Loss: 0.191 | Train Acc: 93.71%
+     Val. Loss: 0.412 |  Val. Acc: 86.48%
+Epoch: 09
+    Train Loss: 0.179 | Train Acc: 93.99%
+     Val. Loss: 0.412 |  Val. Acc: 86.44%
+Epoch: 10
+    Train Loss: 0.169 | Train Acc: 94.35%
+     Val. Loss: 0.412 |  Val. Acc: 86.57% 
+```
+
+```py
+test_loss, test_acc = evaluate(model, test_iterator, criterion, TAG_PAD_IDX)
+
+print(f'Test Loss: {test_loss:.3f} |  Test Acc: {test_acc*100:.2f}%')
+```
+```
+Test Loss: 0.417 |  Test Acc: 87.06%
+```
