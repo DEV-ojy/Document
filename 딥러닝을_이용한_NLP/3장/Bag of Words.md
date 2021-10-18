@@ -129,3 +129,58 @@ print(vector.vocabulary_)
 CountVectorizer는 띄어쓰기를 기준으로 분리한 뒤에 '물가상승률과'와 '물가상승률은' 으로 조사를 포함해서 하나의 단어로 판단하기 때문에 서로 다른 두 단어로 인식합니다
 
 그리고 '물가상승률과'와 '물가상승률은'이 각자 다른 인덱스에서 1이라는 빈도의 값을 갖게 됩니다
+
+## 4. 불용어를 제거한 BoW 만들기
+
+앞서 불용어는 자연어 처리에서 별로 의미를 갖지않는 단어들이라고 언급한 바 있습니다 BoW를 사용한다는 것은 그 문서에서 각 단어가 얼마나 자주 등장했는지를 보겠다는 것입니다  그리고 각 단어에 대한 빈도수를 수치화 하겠다는 것은 결국 텍스트 내에서 어떤 단어들이 중요한지를 보고싶다는 의미를 함축하고 있습니다
+
+그렇다면 BoW를 만들때 불용어를 제거하는 일은 자연어 처리의 정확도를 높이기 위해서 선택할 수 있는 전처리 기법입니다
+
+영어의 BoW를 만들기 위해 사용하는 CountVectorizer는 불용어를 지정하면, 불용어는 제외하고 BoW를 만들 수 있도록 불용어 제거 기능을 지원하고 있습니다
+
+### (1) 사용자가 직접 정의한 불용어 사용
+
+```py
+from sklearn.feature_extraction.text import CountVectorizer
+
+text = ["Family is not an important thing. It's everything."]
+vect = CountVectorizer(stop_words=["the", "a", "an", "is", "not"])
+print(vect.fit_transform(text).toarray()) 
+print(vect.vocabulary_)
+```
+```
+[[1 1 1 1 1]]
+{'family': 1, 'important': 2, 'thing': 4, 'it': 3, 'everything': 0}
+```
+### (2) CountVectorizer에서 제공하는 자체 불용어 사용
+
+```py
+from sklearn.feature_extraction.text import CountVectorizer
+
+text = ["Family is not an important thing. It's everything."]
+vect = CountVectorizer(stop_words="english")
+print(vect.fit_transform(text).toarray())
+print(vect.vocabulary_)
+```
+```
+[[1 1 1]]
+{'family': 0, 'important': 1, 'thing': 2}
+```
+
+### (3) NLTK에서 지원하는 불용어 사용
+
+```py
+from sklearn.feature_extraction.text import CountVectorizer
+from nltk.corpus import stopwords
+
+text = ["Family is not an important thing. It's everything."]
+sw = stopwords.words("english")
+vect = CountVectorizer(stop_words =sw)
+print(vect.fit_transform(text).toarray()) 
+print(vect.vocabulary_)
+```
+
+```
+[[1 1 1 1]]
+{'family': 1, 'important': 2, 'thing': 3, 'everything': 0}
+```
