@@ -29,3 +29,66 @@
 그렇기 때문에 데이터를 구성하는 것 자체가 하나의 부담입니다 
 
 
+## 2.아마존 리뷰 데이터에 대한 이해 
+
+데이터는 아마존 리뷰 데이터입니다 아래의 링크에서 데이터를 다운로드 합니다 
+
+링크 : https://www.kaggle.com/snap/amazon-fine-food-reviews
+
+
+우선 필요한 도구들을 임포트 합니다 
+
+```py
+import numpy as np
+import pandas as pd
+import re
+import matplotlib.pyplot as plt
+from nltk.corpus import stopwords
+from bs4 import BeautifulSoup 
+from tensorflow.keras.preprocessing.text import Tokenizer 
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import urllib.request
+np.random.seed(seed=0)
+```
+
+### 1)데이터 로드하기 
+
+Reviews.csv 파일을 불러와 데이터 프레임에 저장하겠습니다 이 데이터는 실제로는 약 56만개의 샘플을 가지고 있습니다 하지만 여기서는 간단히 10만개의 샘플만 사용하겠습니다 이는 pd.read_csv의 nrows의 인자로 10만이라는 숫자를 적어주면 됩니다 
+
+```py
+# Reviews.csv 파일을 data라는 이름의 데이터프레임에 저장. 단, 10만개의 행(rows)으로 제한.
+data = pd.read_csv("Reviews.csv 파일의 경로", nrows = 100000)
+print('전체 리뷰 개수 :',(len(data)))
+```
+```
+전체 리뷰 개수 : 100000
+```
+
+전체 리뷰 개수가 10만개인 것을 확인했습니다 5개의 샘플만 출력해봅시다 
+```py
+data.head()
+```
+```py
+지면의 한계로 생략
+```
+5개의 샘플을 출력해보면 'Id', 'ProductId', 'UserId', 'ProfileName', 'HelpfulnessNumerator', 'HelpfulnessDenominator', 'Score', 'Time', 'Summary', 'Text'이라는 10개의 열이 존재함을 알 수 있습니다
+
+그런데 사실 이 중 필요한 열은 'Text'열과 'Summary'열 뿐입니다
+
+Text열과 Summary열만을 분리하고, 다른 열들은 데이터에서 제외시켜서 재저장합니다
+그리고 5개의 샘플을 출력합니다
+
+```py
+data = data[['Text','Summary']]
+data.head()
+```
+
+Text열과 Summary열만 저장된 것을 확인할 수 있습니다 Text열이 원문이고, Summary열이 Text열에 대한 요약입니다 다시 말해 모델은 Text(원문)으로부터 Summary(요약)을 예측하도록 훈련됩니다 
+랜덤으로 샘플 몇 가지를 더 출력해봅시다
+
+```py
+data.sample(10)
+```
+
+여기서는 data.sample(10)를 한 번만 실행했지만 지속적으로 몇 차례 더 실행하면서 샘플의 구조를 확인해보세요 원문은 꽤 긴 반면에, Summary에는 3~4개의 단어만으로 구성된 경우도 많아보입니다
+
