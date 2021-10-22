@@ -156,3 +156,79 @@ print(stop_words)
 {'this', "doesn't", 'until', 'as', ... 중략 ... ,'whom', 'here', 'ma', "it's", 'am', 'your'}
 ```
 
+전처리 함수를 설계합니다 
+
+```py
+# 전처리 함수
+def preprocess_sentence(sentence, remove_stopwords = True):
+    sentence = sentence.lower() # 텍스트 소문자화
+    sentence = BeautifulSoup(sentence, "lxml").text # <br />, <a href = ...> 등의 html 태그 제거
+    sentence = re.sub(r'\([^)]*\)', '', sentence) # 괄호로 닫힌 문자열  제거 Ex) my husband (and myself) for => my husband for
+    sentence = re.sub('"','', sentence) # 쌍따옴표 " 제거
+    sentence = ' '.join([contractions[t] if t in contractions else t for t in sentence.split(" ")]) # 약어 정규화
+    sentence = re.sub(r"'s\b","",sentence) # 소유격 제거. Ex) roland's -> roland
+    sentence = re.sub("[^a-zA-Z]", " ", sentence) # 영어 외 문자(숫자, 특수문자 등) 공백으로 변환
+    sentence = re.sub('[m]{2,}', 'mm', sentence) # m이 3개 이상이면 2개로 변경. Ex) ummmmmmm yeah -> umm yeah
+
+    # 불용어 제거 (Text)
+    if remove_stopwords:
+        tokens = ' '.join(word for word in sentence.split() if not word in stop_words if len(word) > 1)
+    # 불용어 미제거 (Summary)
+    else:
+        tokens = ' '.join(word for word in sentence.split() if len(word) > 1)
+    return tokens
+```
+여기서는 Text 열에서는 불용어를 제거하고, Summary 열에서는 불용어를 제거하지 않기로 결정했습니다 Summary를 입력으로 할 때는 두번째 인자를 0으로 줘서 불용어를 제거하지 않는 버전을 실행하겠습니다 
+
+임의의 Text 문장과 Summary 문장을 만들어 전처리 함수를 통한 전처리 후의 결과를 확인해보겠습니다
+
+```py
+temp_text = 'Everything I bought was great, infact I ordered twice and the third ordered was<br />for my mother and father.'
+temp_summary = 'Great way to start (or finish) the day!!!'
+print(preprocess_sentence(temp_text))
+print(preprocess_sentence(temp_summary, 0))
+```
+```
+everything bought great infact ordered twice third ordered wasfor mother father
+great way to start the day
+```
+
+우선 Text 열에 대해서 전처리를 수행하겠습니다 전처리 후에는 5개의 전처리 된 샘플을 출력합니다 
+
+```py
+# Text 열 전처리
+clean_text = []
+for s in data['Text']:
+    clean_text.append(preprocess_sentence(s))
+clean_text[:5]
+```
+```
+['bought several vitality canned dog food products found good quality product looks like stew processed meat smells better labrador finicky appreciates product better',
+ 'product arrived labeled jumbo salted peanuts peanuts actually small sized unsalted sure error vendor intended represent product jumbo',
+ 'confection around centuries light pillowy citrus gelatin nuts case filberts cut tiny squares liberally coated powdered sugar tiny mouthful heaven chewy flavorful highly recommend yummy treat familiar story lewis lion witch wardrobe treat seduces edmund selling brother sisters witch',
+ 'looking secret ingredient robitussin believe found got addition root beer extract ordered made cherry soda flavor medicinal',
+ 'great taffy great price wide assortment yummy taffy delivery quick taffy lover deal']
+```
+
+이제 Summary열에 대해서 전처리를 수행하겠습니다 전처리 후에는 5개의 전처리 된 샘플을 출력합니다
+
+```py
+# Summary 열 전처리
+clean_summary = []
+for s in data['Summary']:
+    clean_summary.append(preprocess_sentence(s, 0))
+clean_summary[:5]
+```
+```
+['good quality dog food',
+ 'not as advertised',
+ 'delight says it all',
+ 'cough medicine',
+ 'great taffy']
+```
+전처리 후의 결과를 다시 데이터프레임에 저장합니다 
+```py
+data['Text'] = clean_text
+data['Summary'] = clean_summary
+```
+
