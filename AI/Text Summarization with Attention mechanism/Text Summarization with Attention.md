@@ -232,3 +232,74 @@ data['Text'] = clean_text
 data['Summary'] = clean_summary
 ```
 
+혹시 전처리 과정에서 빈 값이 생겼다면 Null 값으로 변경한 후에 Null 값을 가진 샘플이 생겼는지 확인합니다
+
+```py
+# 길이가 공백인 샘플은 NULL 값으로 변환
+data.replace('', np.nan, inplace=True)
+print(data.isnull().sum())
+```
+```
+Text        0
+Summary    70
+dtype: int64
+```
+Summary 열에서 70개의 샘플이 Null 값을 가집니다 이 샘플들을 제거해주고, 전체 샘플수를 확인합니다
+
+```py
+data.dropna(axis = 0, inplace = True)
+print('전체 샘플수 :',(len(data)))
+```
+```
+전체 샘플수 : 88355
+```
+
+이제 Text 열과 Summary 열에 대해서 길이 분포를 확인해보겠습니다
+
+```py
+# 길이 분포 출력
+text_len = [len(s.split()) for s in data['Text']]
+summary_len = [len(s.split()) for s in data['Summary']]
+
+print('텍스트의 최소 길이 : {}'.format(np.min(text_len)))
+print('텍스트의 최대 길이 : {}'.format(np.max(text_len)))
+print('텍스트의 평균 길이 : {}'.format(np.mean(text_len)))
+print('요약의 최소 길이 : {}'.format(np.min(summary_len)))
+print('요약의 최대 길이 : {}'.format(np.max(summary_len)))
+print('요약의 평균 길이 : {}'.format(np.mean(summary_len)))
+
+plt.subplot(1,2,1)
+plt.boxplot(summary_len)
+plt.title('Summary')
+plt.subplot(1,2,2)
+plt.boxplot(text_len)
+plt.title('Text')
+plt.tight_layout()
+plt.show()
+
+plt.title('Summary')
+plt.hist(summary_len, bins=40)
+plt.xlabel('length of samples')
+plt.ylabel('number of samples')
+plt.show()
+
+plt.title('Text')
+plt.hist(text_len, bins=40)
+plt.xlabel('length of samples')
+plt.ylabel('number of samples')
+plt.show()
+```
+
+```
+텍스트의 최소 길이 : 2
+텍스트의 최대 길이 : 1235
+텍스트의 평균 길이 : 38.792428272310566
+요약의 최소 길이 : 1
+요약의 최대 길이 : 28
+요약의 평균 길이 : 4.010729443721352
+```
+
+![image](https://user-images.githubusercontent.com/80239748/138558103-b8d92304-b3d3-4981-84e7-1a70a0d0caa8.png)
+
+![image](https://user-images.githubusercontent.com/80239748/138558112-cf84009f-1044-4dc5-bbcd-4b11d1140269.png)
+
