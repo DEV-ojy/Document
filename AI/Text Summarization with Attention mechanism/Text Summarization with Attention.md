@@ -303,3 +303,57 @@ plt.show()
 
 ![image](https://user-images.githubusercontent.com/80239748/138558112-cf84009f-1044-4dc5-bbcd-4b11d1140269.png)
 
+
+원문 텍스트는 대체적으로 100이하의 길이를 가집니다 또한 평균 길이는 38입니다 
+요약의 경우에는 대체적으로 15이하의 길이를 가지며 평균 길이는 4입니다 여기서 패딩의 길이를 정하겠습니다 평균 길이보다는 크게 잡아 각각 50과 8로 결정합니다 
+
+
+```py
+text_max_len = 50 
+summary_max_len = 8
+```
+
+50과 8이라는 이 두 길이가 얼마나 많은 샘플들의 길이보다 큰지 확인해보겠습니다
+
+```py
+def below_threshold_len(max_len, nested_list):
+  cnt = 0
+  for s in nested_list:
+    if(len(s.split()) <= max_len):
+        cnt = cnt + 1
+  print('전체 샘플 중 길이가 %s 이하인 샘플의 비율: %s'%(max_len, (cnt / len(nested_list))))
+```
+
+우선 Text열에 대해서 확인해봅시다 
+
+```py
+below_threshold_len(text_max_len, data['Text'])
+```
+```
+전체 샘플 중 길이가 50 이하인 샘플의 비율: 0.7745119121724859
+```
+
+Text 열은 길이가 50 이하인 비율이 77%입니다 약 23%의 샘플이 길이 50보다 큽니다 
+Summary열에 대해서 확인해봅시다 
+
+```py
+below_threshold_len(summary_max_len, data['Summary'])
+```
+```
+전체 샘플 중 길이가 8 이하인 샘플의 비율: 0.9424593967517402
+```
+Summary 열은 길이가 8 이하인 경우 94%입니다 여기서는 정해준 최대 길이보다 큰 샘플들은 제거하겠습니다 
+
+```py
+data = data[data['Text'].apply(lambda x: len(x.split()) <= text_max_len)]
+data = data[data['Summary'].apply(lambda x: len(x.split()) <= summary_max_len)]
+print('전체 샘플수 :',(len(data)))
+```
+```
+전체 샘플수 : 65818
+```
+
+
+
+
+
