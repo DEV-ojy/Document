@@ -353,7 +353,22 @@ print('전체 샘플수 :',(len(data)))
 전체 샘플수 : 65818
 ```
 
+seq2seq 훈련을 위해서는 디코더의 입력과 레이블에 시작 토큰과 종료 토큰을 추가할 필요가 있습니다 시작 토큰은 'sostoken' 종료 토큰은 'eostoken'이라 명명하고 앞뒤로 추가하겠습니다 
 
+```py
+# 요약 데이터에는 시작 토큰과 종료 토큰을 추가한다.
+data['decoder_input'] = data['Summary'].apply(lambda x : 'sostoken '+ x)
+data['decoder_target'] = data['Summary'].apply(lambda x : x + ' eostoken')
+data.head()
+```
+
+인코더의 입력, 디코더의 입력과 레이블을 각각 저장해줍니다 
+
+```py
+encoder_input = np.array(data['Text'])
+decoder_input = np.array(data['decoder_input'])
+decoder_target = np.array(data['decoder_target'])
+```
 
 
 
