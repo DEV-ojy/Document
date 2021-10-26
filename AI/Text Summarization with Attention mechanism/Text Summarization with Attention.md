@@ -370,5 +370,52 @@ decoder_input = np.array(data['decoder_input'])
 decoder_target = np.array(data['decoder_target'])
 ```
 
+### 3) 데이터의 분리 
 
+훈련 데이터와 테스트 데이터를 분리해보겠습니다 우선 순서가 섞인 정수 시퀀스를 만들어줍니다 
 
+```py
+indices = np.arange(encoder_input.shape[0])
+np.random.shuffle(indices)
+print(indices)
+```
+```
+[29546 43316 24839 ... 45891 42613 43567]
+```
+이 정수 시퀀스 순서를 데이터의 샘플 순서로 정의해주면 샘플의 순서는 섞이게 됩니다 
+
+```py
+encoder_input = encoder_input[indices]
+decoder_input = decoder_input[indices]
+decoder_target = decoder_target[indices]
+```
+이제 섞인 데이터를 8:2의 비율로 훈련 데이터와 테스트 데이터로 분리해주겠습니다 
+```py
+n_of_val = int(len(encoder_input)*0.2)
+print('테스트 데이터의 수 :',n_of_val)
+```
+```
+테스트 데이터의 수 : 13163
+```
+테스트 데이터는 전체 데이터에서 20%에 해당하는 13,163개를 사용하겠습니다 
+```py
+encoder_input_train = encoder_input[:-n_of_val]
+decoder_input_train = decoder_input[:-n_of_val]
+decoder_target_train = decoder_target[:-n_of_val]
+
+encoder_input_test = encoder_input[-n_of_val:]
+decoder_input_test = decoder_input[-n_of_val:]
+decoder_target_test = decoder_target[-n_of_val:]
+```
+```py
+print('훈련 데이터의 개수 :', len(encoder_input_train))
+print('훈련 레이블의 개수 :',len(decoder_input_train))
+print('테스트 데이터의 개수 :',len(encoder_input_test))
+print('테스트 레이블의 개수 :',len(decoder_input_test))
+```
+```
+훈련 데이터의 개수 : 52655
+훈련 레이블의 개수 : 52655
+테스트 데이터의 개수 : 13163
+테스트 레이블의 개수 : 13163
+```
