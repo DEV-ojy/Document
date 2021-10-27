@@ -419,3 +419,127 @@ print('테스트 레이블의 개수 :',len(decoder_input_test))
 테스트 데이터의 개수 : 13163
 테스트 레이블의 개수 : 13163
 ```
+### 4) 정수 인코딩 
+
+이제 기계가 텍스트를 숫자로 처리할 수 있도록 훈련 데이터와 테스트 데이터에 정수 인코딩을 수행해야 합니다 훈련 데이터에 대해서 단어 집합(vocaburary)을 만들어봅시다 
+
+```py
+src_tokenizer = Tokenizer()
+src_tokenizer.fit_on_texts(encoder_input_train)
+```
+
+이제 단어 집합이 생성되는 동시에 각 단어에 고유한 정수가 부여되었습니다 이는 src_tokenizer.word_index에 저장되어져 있습니다 
+
+여기서는 빈도수가 낮은 단어들은 자연어 처리에서 배제하고자 합니다 등장 빈도수가 7회 미만인 단어들이 이 데이터에서 얼만큼의 비중을 차지하는지 확인해봅시다
+
+```py
+threshold = 7
+total_cnt = len(src_tokenizer.word_index) # 단어의 수
+rare_cnt = 0 # 등장 빈도수가 threshold보다 작은 단어의 개수를 카운트
+total_freq = 0 # 훈련 데이터의 전체 단어 빈도수 총 합
+rare_freq = 0 # 등장 빈도수가 threshold보다 작은 단어의 등장 빈도수의 총 합
+
+# 단어와 빈도수의 쌍(pair)을 key와 value로 받는다.
+for key, value in src_tokenizer.word_counts.items():
+    total_freq = total_freq + value
+
+    # 단어의 등장 빈도수가 threshold보다 작으면
+    if(value < threshold):
+        rare_cnt = rare_cnt + 1
+        rare_freq = rare_freq + value
+
+print('단어 집합(vocabulary)의 크기 :',total_cnt)
+print('등장 빈도가 %s번 이하인 희귀 단어의 수: %s'%(threshold - 1, rare_cnt))
+print('단어 집합에서 희귀 단어를 제외시킬 경우의 단어 집합의 크기 %s'%(total_cnt - rare_cnt))
+print("단어 집합에서 희귀 단어의 비율:", (rare_cnt / total_cnt)*100)
+print("전체 등장 빈도에서 희귀 단어 등장 빈도 비율:", (rare_freq / total_freq)*100)
+```
+```
+단어 집합(vocabulary)의 크기 : 32031
+등장 빈도가 6번 이하인 희귀 단어의 수: 23779
+단어 집합에서 희귀 단어를 제외시킬 경우의 단어 집합의 크기 8252
+단어 집합에서 희귀 단어의 비율: 74.23745746308263
+전체 등장 빈도에서 희귀 단어 등장 빈도 비율: 3.393443023084609
+```
+등장 빈도가 threshold 값인 7회 미만 즉, 6회 이하인 단어들은 단어 집합에서 무려 70% 이상을 차지합니다 하지만, 실제로 훈련 데이터에서 등장 빈도로 차지하는 비중은 상대적으로 적은 수치인 3.39%밖에 되지 않습니다 
+
+여기서는 등장 빈도가 6회 이하인 단어들은 정수 인코딩 과정에서 배제시키고자 합니다 위에서 이를 제외한 단어 집합의 크기를 8,233으로 계산했는데, 저자는 깔끔한 값을 선호하여 이와 비슷한 값으로 단어 집합의 크기를 8000으로 제한하겠습니다
+
+```
+src_vocab = 8000
+src_tokenizer = Tokenizer(num_words = src_vocab) 
+src_tokenizer.fit_on_texts(encoder_input_train)
+
+# 텍스트 시퀀스를 정수 시퀀스로 변환
+encoder_input_train = src_tokenizer.texts_to_sequences(encoder_input_train) 
+encoder_input_test = src_tokenizer.texts_to_sequences(encoder_input_test)
+```
+
+이제 레이블에 해당하는 요약 데이터에 대해서도 수행하겠습니다.
+```py
+tar_tokenizer = Tokenizer()
+tar_tokenizer.fit_on_texts(decoder_input_train)
+```
+이제 단어 집합이 생성되는 동시에 각 단어에 고유한 정수가 부여되었습니다 이는 tar_tokenizer.word_index에 저장되어져 있습니다 
+
+등장 빈도수가 6회 미만인 단어들이 이 데이터에서 얼만큼의 비중을 차지하는지 확인해봅시다
+```py
+threshold = 6
+total_cnt = len(tar_tokenizer.word_index) # 단어의 수
+rare_cnt = 0 # 등장 빈도수가 threshold보다 작은 단어의 개수를 카운트
+total_freq = 0 # 훈련 데이터의 전체 단어 빈도수 총 합
+rare_freq = 0 # 등장 빈도수가 threshold보다 작은 단어의 등장 빈도수의 총 합
+
+# 단어와 빈도수의 쌍(pair)을 key와 value로 받는다.
+for key, value in tar_tokenizer.word_counts.items():
+    total_freq = total_freq + value
+
+    # 단어의 등장 빈도수가 threshold보다 작으면
+    if(value < threshold):
+        rare_cnt = rare_cnt + 1
+        rare_freq = rare_freq + value
+
+print('단어 집합(vocabulary)의 크기 :',total_cnt)
+print('등장 빈도가 %s번 이하인 희귀 단어의 수: %s'%(threshold - 1, rare_cnt))
+print('단어 집합에서 희귀 단어를 제외시킬 경우의 단어 집합의 크기 %s'%(total_cnt - rare_cnt))
+print("단어 집합에서 희귀 단어의 비율:", (rare_cnt / total_cnt)*100)
+print("전체 등장 빈도에서 희귀 단어 등장 빈도 비율:", (rare_freq / total_freq)*100)
+```
+```
+단어 집합(vocabulary)의 크기 : 10510
+등장 빈도가 5번 이하인 희귀 단어의 수: 8128
+단어 집합에서 희귀 단어를 제외시킬 경우의 단어 집합의 크기 2382
+단어 집합에서 희귀 단어의 비율: 77.33587059942911
+전체 등장 빈도에서 희귀 단어 등장 빈도 비율: 5.896286343062141
+```
+등장 빈도가 5회 이하인 단어들은 단어 집합에서 약 77%를 차지합니다 하지만, 실제로 훈련 데이터에서 등장 빈도로 차지하는 비중은 상대적으로 매우 적은 수치인 5.89%밖에 되지 않습니다
+
+이 단어들은 정수 인코딩 과정에서 배제시키겠습니다
+
+```
+tar_vocab = 2000
+tar_tokenizer = Tokenizer(num_words = tar_vocab) 
+tar_tokenizer.fit_on_texts(decoder_input_train)
+tar_tokenizer.fit_on_texts(decoder_target_train)
+```
+```
+# 텍스트 시퀀스를 정수 시퀀스로 변환
+decoder_input_train = tar_tokenizer.texts_to_sequences(decoder_input_train) 
+decoder_target_train = tar_tokenizer.texts_to_sequences(decoder_target_train)
+decoder_input_test = tar_tokenizer.texts_to_sequences(decoder_input_test)
+decoder_target_test = tar_tokenizer.texts_to_sequences(decoder_target_test)
+```
+
+정수 인코딩이 정상 진행되었는지 훈련 데이터에 대해서 5개의 샘플을 출력해봅시다.
+```py
+print(decoder_input_train[:5])
+```
+```
+[[1, 687], [1, 53, 21, 182, 1162, 240], [1, 6, 480, 113, 278, 181], [1, 15, 108, 215], [1, 54, 178, 21]]
+```
+```py
+print(decoder_target_train[:5])
+```
+```
+[[687, 2], [53, 21, 182, 1162, 240, 2], [6, 480, 113, 278, 181, 2], [15, 108, 215, 2], [54, 178, 21, 2]]
+```
