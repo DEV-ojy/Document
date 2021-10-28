@@ -543,3 +543,55 @@ print(decoder_target_train[:5])
 ```
 [[687, 2], [53, 21, 182, 1162, 240, 2], [6, 480, 113, 278, 181, 2], [15, 108, 215, 2], [54, 178, 21, 2]]
 ```
+
+### 5) 빈 샘플 제거 
+
+전체 데이터에서 빈도수가 낮은 단어가 삭제되었다는 것은 빈도수가 낮은 단어만으로 구성되었던 샘플들은 이제 빈 샘플이 되었다는것을 의미합니다 
+
+요약문에서 길이가 0이 된 샘플들의 인덱스를 받아옵시다 주의할 점은 요약문인 decoder_input에는 sostoken 또는 decoder_target에는 eostoken이 추가된 상태이고, 이 두 토큰은 모든 샘플에서 등장하므로 빈도수가 샘플수와 동일하여 단어 집합 제한에도 삭제 되지 않습니다
+
+그래서 이제 길이가 0이 된 요약문의 실질적 길이는 1입니다 decoder_input에는 sostoken, decoder_target에는 eostoken만 남았을 것이기 때문입니다
+
+```py
+drop_train = [index for index, sentence in enumerate(decoder_input_train) if len(sentence) == 1]
+drop_test = [index for index, sentence in enumerate(decoder_input_test) if len(sentence) == 1]
+```
+
+훈련 데이터와 데스트 데이터에 대해서 요약문의 길이가 1인 경우 인덱스를 각각 drop_train과 drop_test에 저장하였습니다 이 샘플들을 모두 삭제하고자 합니다 
+
+```py
+print('삭제할 훈련 데이터의 개수 :',len(drop_train))
+print('삭제할 테스트 데이터의 개수 :',len(drop_test))
+```
+```
+삭제할 훈련 데이터의 개수 : 1235
+삭제할 테스트 데이터의 개수 : 337
+```
+
+삭제 후의 개수는 다음과 같습니다 
+
+```py
+encoder_input_train = np.delete(encoder_input_train, drop_train, axis=0)
+decoder_input_train = np.delete(decoder_input_train, drop_train, axis=0)
+decoder_target_train = np.delete(decoder_target_train, drop_train, axis=0)
+
+encoder_input_test = np.delete(encoder_input_test, drop_test, axis=0)
+decoder_input_test = np.delete(decoder_input_test, drop_test, axis=0)
+decoder_target_test = np.delete(decoder_target_test, drop_test, axis=0)
+
+print('훈련 데이터의 개수 :', len(encoder_input_train))
+print('훈련 레이블의 개수 :',len(decoder_input_train))
+print('테스트 데이터의 개수 :',len(encoder_input_test))
+print('테스트 레이블의 개수 :',len(decoder_input_test))
+```
+```
+훈련 데이터의 개수 : 51420
+훈련 레이블의 개수 : 51420
+테스트 데이터의 개수 : 12826
+테스트 레이블의 개수 : 12826
+```
+
+
+
+
+
