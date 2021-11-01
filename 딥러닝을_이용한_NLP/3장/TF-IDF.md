@@ -67,6 +67,103 @@ TF-IDF는 모든 문서에서 자주 등장하는 단어는 중요도가 낮다�
 
 ![image](https://user-images.githubusercontent.com/80239748/139574143-38f0e247-73d3-4b27-984e-e6ab0a31d202.png)
 
+문서의 총 수는 4이기 때문에 ln 안에서 분자는 늘 4으로 동일합니다 분모의 경우에는 각 단어가 등장한 문서의 수(DF)를 의미하는데, 예를 들어서 '먹고'의 경우에는 총 2개의 문서(문서1, 문서2)에 등장했기 때문에 2라는 값을 가집니다 
 
+각 단어에 대해서 IDF의 값을 비교해보면 문서 1개에만 등장한 단어와 문서2개에만 등장한 단어는 값의 차이를 보입니다 IDF는 여러 문서에서 등장한 단어의 가중치를 낮추는 역할을 하기 때문입니다
+
+그러면 이제 TF-IDF를 계산해보도록 하겠습니다 TF는 DTM을 그대로 가져오면 각 문서에서의 각 단어의 TF를 가져오게 되기 때문에, 앞서 사용한 DTM에서 단어 별로 위의 IDF값을 그대로 곱해주면 TF-IDF가 나오게 됩니다
+
+![image](https://user-images.githubusercontent.com/80239748/139663800-d8954d05-fa94-4af7-8561-a2389157051f.png)
+
+사실 예제 문서가 굉장히 간단하기 때문에 계산은 매우 쉽습니다 문서3에서의 바나나만 TF 값이 2이므로 IDF에 2를 곱해주고, 나머진 TF 값이 1이므로 그대로 IDF 값을 가져오면 됩니다 문서2에서의 바나나의 TF-IDF 가중치와 문서3에서의 바나나의 TF-IDF 가중치가 다른 것을 볼 수 있습니다
+
+ 수식적으로 말하면, TF가 각각 1과 2로 달랐기 때문인데 TF-IDF에서의 관점에서 보자면 TF-IDF는 특정 문서에서 자주 등장하는 단어는 그 문서 내에서 중요한 단어로 판단하기 때문입니다 문서2에서는 바나나를 한 번 언급했지만, 문서3에서는 바나나를 두 번 언급했기 때문에 문서3에서의 바나나를 더욱 중요한 단어라고 판단하는 것입니다
+
+ ## 2. 파이썬으로 TF-IDF 직접 구현하기 
+
+필요한 도구를 먼저 임포트합니다 
+
+```py
+import pandas as pd # 데이터프레임 사용을 위해
+from math import log # IDF 계산을 위해
+```
+앞의 설명에서 사용한 4개의 문서를 docs에 저장합니다 
+```py
+docs = [
+  '먹고 싶은 사과',
+  '먹고 싶은 바나나',
+  '길고 노란 바나나 바나나',
+  '저는 과일이 좋아요'
+] 
+vocab = list(set(w for doc in docs for w in doc.split()))
+vocab.sort()
+```
+TF,IDF그리고 TF-IDF값을 구하는 함수를 구현합니다 
+```py
+N = len(docs) # 총 문서의 수
+
+def tf(t, d):
+    return d.count(t)
+
+def idf(t):
+    df = 0
+    for doc in docs:
+        df += t in doc
+    return log(N/(df + 1))
+
+def tfidf(t, d):
+    return tf(t,d)* idf(t)
+```
+이제 TF를 구해보겠습니다 다시 말해 DTM을 데이터프레임에 저장하여 출력해보겠습니다 
+```py
+result = []
+for i in range(N): # 각 문서에 대해서 아래 명령을 수행
+    result.append([])
+    d = docs[i]
+    for j in range(len(vocab)):
+        t = vocab[j]        
+        result[-1].append(tf(t, d))
+
+tf_ = pd.DataFrame(result, columns = vocab)
+tf_
+```
+정상적으로 DTM이 출력되었습니다 이제 각 단어에 대한 IDF값을 구해봅시다 
+```py
+result = []
+for j in range(len(vocab)):
+    t = vocab[j]
+    result.append(idf(t))
+
+idf_ = pd.DataFrame(result, index = vocab, columns = ["IDF"])
+idf_
+```
+위에서 수기로 구한 IDF값들과 정확히 일치합니다 이제 TF-IDF행렬을 출력해봅시다 
+```py
+result = []
+for i in range(N):
+    result.append([])
+    d = docs[i]
+    for j in range(len(vocab)):
+        t = vocab[j]
+
+        result[-1].append(tfidf(t,d))
+
+tfidf_ = pd.DataFrame(result, columns = vocab)
+tfidf_
+```
+지금까지 TF-IDF의 가장 기본적인 식에 대해서 학습하고, 이를 실제로 구현하는 실습을 진행해보았습니다 그런데 사실 실제 TF-IDF 구현을 제공하고 있는 많은 패키지들은 패키지마다 식이 조금씩 다르긴 하지만, 위에서 배운 기본 식에서 조정된 식을 사용합니다
+
+그 이유는 위의 기본적인 식을 바탕으로 한 구현에도 여전히 문제점이 존재하기 때문입니다
+만약 전체 문서의 수 n이 4인데, df(t)의 값이 3인 경우에는 어떤 일이 벌어질까요? df(t)에 1이 더해지면서 log항의 분자와 분모의 값이 같아지게 됩니 
+
+이는 log의 진수값이 1이 되면서 idf(d,t)의 값이 0이 됨을 의미합니다 식으로 표현하면 idf(d,t) = log(n/(df(t)+1))=0입니다 IDF의 값이 0이라면 더 이상 가중치의 역할을 수행하지 못합니다 
+
+그래서 실제 구현체는 idf(d,t) = log(n/(df(t)+1))+1과 같이 log항에 1을 더해줘서 log항의 값이 0이되더라도 IDF가 치소 1이상의 값을 가지도록 합니다 
+```py
+
+```
+```py
+
+```
 
 
