@@ -640,3 +640,29 @@ encoder_lstm3 = LSTM(hidden_size, return_state=True, return_sequences=True, drop
 encoder_outputs, state_h, state_c= encoder_lstm3(encoder_output2)
 ```
 
+디코더를 설계해보겠습니다 단, 출력층은 제외하고 설계하겠습니다 디코더의 설계는 인코더와 사실상 동일하지만 초기상태를 인코더의 상태로 주어야 하는 것에 주의합시다
+
+```py
+# 디코더
+decoder_inputs = Input(shape=(None,))
+
+# 디코더의 임베딩 층
+dec_emb_layer = Embedding(tar_vocab, embedding_dim)
+dec_emb = dec_emb_layer(decoder_inputs)
+
+# 디코더의 LSTM
+decoder_lstm = LSTM(hidden_size, return_sequences = True, return_state = True, dropout = 0.4, recurrent_dropout=0.2)
+decoder_outputs, _, _ = decoder_lstm(dec_emb, initial_state = [state_h, state_c])
+```
+이제 디코더의 출력층을 설계합니다 
+```py
+# 디코더의 출력층
+decoder_softmax_layer = Dense(tar_vocab, activation = 'softmax')
+decoder_softmax_outputs = decoder_softmax_layer(decoder_outputs) 
+
+# 모델 정의
+model = Model([encoder_inputs, decoder_inputs], decoder_softmax_outputs)
+model.summary()
+```
+
+
