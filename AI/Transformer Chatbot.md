@@ -61,3 +61,35 @@ for sentence in train_data['A']:
     sentence = sentence.strip()
     questions.append(sentence)
 ``` 
+## 2.단어 집합 생성
+
+서브워드텍스트인코더를 사용해봅시다 자주 사용되는 서브워드 단위로 토큰을 분리하는 토크나이저로 학습 데이터로부터 학습하여 서브워드로 구성된 단어 집합을 생성합니다 
+
+```py
+# 서브워드텍스트인코더를 사용하여 질문, 답변 데이터로부터 단어 집합(Vocabulary) 생성
+tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
+    questions + answers, target_vocab_size=2**13)
+```
+단어집합이 생성되었습니다 그런데 인코더-디코더 모델 계열에는 디코더의 입력으로 사용할 시작을 의미하는 시작 토큰 SOS 종료 토큰 EOS가 존재합니다 해당 토큰들도 단어 집합에 포함시킬 필요가 있으므로 이 두 토큰에 정수를 부여해줍니다 
+
+```py
+# 시작 토큰과 종료 토큰에 대한 정수 부여.
+START_TOKEN, END_TOKEN = [tokenizer.vocab_size], [tokenizer.vocab_size + 1]
+
+# 시작 토큰과 종료 토큰을 고려하여 단어 집합의 크기를 + 2
+VOCAB_SIZE = tokenizer.vocab_size + 2
+```
+시작 토큰과 종료 토큰을 추가해주었으나 단어 집합의 크기도 +2를 해줍니다
+
+```py
+print('시작 토큰 번호 :',START_TOKEN)
+print('종료 토큰 번호 :',END_TOKEN)
+print('단어 집합의 크기 :',VOCAB_SIZE)
+```
+```
+시작 토큰 번호 : [8178]
+종료 토큰 번호 : [8179]
+단어 집합의 크기 : 8180
+```
+
+패딩에 사용될 0번 토큰부터 마지막 토큰인 8,179번 토큰까지의 개수를 카운트하면 단어 집합의 크기는 8,180개입니다
