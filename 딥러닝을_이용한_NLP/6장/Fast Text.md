@@ -66,3 +66,43 @@ FastText가 노이즈가 많은 코퍼스에서 강점을 가진 것 또한 이�
 즉, Word2Vec에서는 오타가 섞인 단어는 임베딩이 제대로 되지 않지만 FastText는 이에 대해서도 일정 수준의 성능을 보입니다
 
 예를 들어 단어 apple과 오타로 p를 한 번 더 입력한 appple의 경우에는 실제로 많은 개수의 동일한 n-gram을 가질 것입니다
+
+## 4. 실습으로 비교하는 Word2Vec Vs. FastText
+
+간단한 실습을 통해 Word2Vec와 FastText의 차이를 비교해보도록 하겠습니다 
+
+### 1) Word2Vec
+
+우선 이전 챕터의 전처리 코드와 Word2Vec 학습 코드를 그대로 수행했음을 가정하겠습니다
+
+입력 단어에 대해서 유사한 단어를 찾아내는 코드에 이번에는 electrofishing이라는 단어를 넣어보겠습니다
+
+```py
+model.wv.most_similar("electrofishing")
+```
+해당 코드는 작동하지 않고 이런 에러를 발생시킵니다
+```
+KeyError: "word 'electrofishing' not in vocabulary"
+```
+에러 메시지는 단어 집합(Vocabulary)에 electrofishing이 존재하지 않는다고 합니다 이처럼 Word2Vec는 학습 데이터에 존재하지 않는 단어
+
+즉, 모르는 단어에 대해서는 임베딩 벡터가 존재하지 않기 때문에 단어의 유사도를 계산할 수 없습니다
+### 2) FastText
+
+이번에는 전처리 코드는 그대로 사용하고, Word2Vec 학습 코드만 FastText 학습 코드로 변경하여 실행해봅시다
+
+```py
+from gensim.models import FastText
+model = FastText(result, size=100, window=5, min_count=5, workers=4, sg=1)
+```
+
+학습이 진행되었다면, 이제 electrofishing에 대해서 유사 단어를 찾아보도록 하겠습니다
+
+```py
+model.wv.most_similar("electrofishing")
+```
+```
+[('electrolux', 0.7934642434120178), ('electrolyte', 0.78279709815979), ('electro', 0.779127836227417), ('electric', 0.7753111720085144), ('airbus', 0.7648627758026123), ('fukushima', 0.7612422704696655), ('electrochemical', 0.7611693143844604), ('gastric', 0.7483425140380859), ('electroshock', 0.7477173805236816), ('overfishing', 0.7435552477836609)]
+```
+
+Word2Vec는 학습하지 않은 단어에 대해서 유사한 단어를 찾아내지 못 했지만, FastText는 유사한 단어를 계산해서 출력하고 있음을 볼 수 있습니다
