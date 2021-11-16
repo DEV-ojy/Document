@@ -60,3 +60,78 @@ Embedding()은 (number of samples, input_length)인 2D 정수 텐서를 입력�
 Embedding()은 워드 임베딩 작업을 수행하고 (number of samples, input_length, embedding word dimentionality)인 3D 실수 텐서를 리턴합니다
 
 케라스의 임베딩 층(embedding layer)을 사용하는 간단한 실습을 진행해보겠습니다
+
+### 2) 임베딩 층 사용하기 
+
+RNN 챕터에서 사용했었던 임베딩 층을 복습해보겠습니다 문장의 긍,부정을 판단하는 감성 분류 모델을 만들어봅시다 
+
+```py
+import numpy as np
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+```
+```py
+sentences = ['nice great best amazing', 'stop lies', 'pitiful nerd', 'excellent work', 'supreme quality', 'bad', 'highly respectable']
+y_train = [1, 0, 0, 1, 1, 0, 1]
+```
+
+문장과 레이블 데이터를 만들었습니다 긍정은 1 부정은 0인 레이블입니다 
+
+```py
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(sentences)
+vocab_size = len(tokenizer.word_index) + 1
+print(vocab_size)
+```
+```
+16
+```
+케라스의 Tokenizer()를 사용하여 토큰화 시킨다 
+```py
+X_encoded = tokenizer.texts_to_sequences(sentences)
+print(X_encoded)
+```
+```
+[[1, 2, 3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13], [14, 15]]
+```
+각 문장에 대해서 정수 인코딩을 수행합니다 
+```py
+max_len = max(len(l) for l in X_encoded)
+print(max_len)
+```
+```
+4
+```
+문장 중에서 가장 길이가 긴 문장의 길이는 4입니다 
+```py
+X_train = pad_sequences(X_encoded, maxlen=max_len, padding='post')
+y_train = np.array(y_train)
+print(X_train)
+```
+```
+[[ 1  2  3  4]
+ [ 5  6  0  0]
+ [ 7  8  0  0]
+ [ 9 10  0  0]
+ [11 12  0  0]
+ [13  0  0  0]
+ [14 15  0  0]]
+```
+모든 문장을 패딩하여 길이를 4로 만들어줍니다 훈련 데이터에 대한 전처리가 끝났습니다
+모델을 설계합니다 
+```py
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, Flatten
+
+embedding_dim = 4
+
+model = Sequential()
+model.add(Embedding(vocab_size, embedding_dim, input_length=max_len))
+model.add(Flatten())
+model.add(Dense(1, activation='sigmoid'))
+```
+출력
+```py
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+model.fit(X_train, y_train, epochs=100, verbose=2)
+```
