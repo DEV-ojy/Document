@@ -130,8 +130,40 @@ model.add(Embedding(vocab_size, embedding_dim, input_length=max_len))
 model.add(Flatten())
 model.add(Dense(1, activation='sigmoid'))
 ```
-출력
+출력층에 1개의 뉴런에 활성화 함수로는 시그모이드 함수를 사용하여 이진 분류를 수행합니다
 ```py
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
 model.fit(X_train, y_train, epochs=100, verbose=2)
+```
+
+## 2. 사전 훈련된 워드 임베딩(Pre-Trained Word Embedding) 사용하기
+
+임베딩 벡터를 얻기 위해서 케라스의 Embedding()을 사용하기도 하지만, 때로는 이미 훈련되어져 있는 워드 임베딩을 불러서 이를 임베딩 벡터로 사용하기도 합니다 훈련 데이터가 적은 상황이라면 모델에 케라스의 Embedding()을 사용하는 것보다 다른 텍스트 데이터로 사전 훈련되어 있는 임베딩 벡터를 불러오는 것이 나은 선택일 수 있습니다
+
+훈련 데이터가 적다면 케라스의 Embedding()으로 해당 문제에 충분히 특화된 임베딩 벡터를 만들어내는 것이 쉽지 않습니다 차라리 해당 문제에 특화된 임베딩 벡터를 만드는 것이 어렵다면, 해당 문제에 특화된 것은 아니지만 보다 일반적이고 보다 많은 훈련 데이터로 이미 Word2Vec이나 GloVe 등으로 학습되어져 있는 임베딩 벡터들을 사용하는 것이 성능의 개선을 가져올 수 있습니다
+
+사전 훈련된 GloVe와 Word2Vec 임베딩을 사용해서 모델을 훈련시키는 실습을 진행해봅시다
+
+GloVe 다운로드 링크 : http://nlp.stanford.edu/data/glove.6B.zip
+Word2Vec 다운로드 링크 : https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM
+
+훈련 데이터는 앞서 사용했던 데이터에 동일한 전처리가 수행된 상태라고 가정하겠습니다
+
+```py
+print(X_train)
+```
+```
+[[ 1  2  3  4]
+ [ 5  6  0  0]
+ [ 7  8  0  0]
+ [ 9 10  0  0]
+ [11 12  0  0]
+ [13  0  0  0]
+ [14 15  0  0]]
+```
+```py
+print(y_train)
+```
+```
+[1, 0, 0, 1, 1, 0, 1]
 ```
