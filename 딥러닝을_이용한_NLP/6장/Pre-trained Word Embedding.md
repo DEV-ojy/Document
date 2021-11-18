@@ -167,3 +167,94 @@ print(y_train)
 ```
 [1, 0, 0, 1, 1, 0, 1]
 ```
+### 1) 사전 훈련된 GloVe 사용하기
+
+임베딩 층을 설계하기 위한 과정부터 달라집니다 우선 다운로드 받은 파일 glove.6B.zip의 압축을 풀면 그 안에 4개의 파일이 있는데 여기서 사용할 파일은 glove.6B.100d.txt 파일입니다
+
+```py
+from urllib.request import urlretrieve, urlopen
+import gzip
+import zipfile
+```
+```py
+urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
+zf = zipfile.ZipFile('glove.6B.zip')
+zf.extractall() 
+zf.close()
+```
+
+glove.6B.100d.txt에 있는 모든 임베딩 벡터들을 불러와보겠습니다 형식은 파이썬의 Dictionary 구조를 사용합니다
+
+```py
+embedding_dict = dict()
+
+f = open('glove.6B.100d.txt', encoding="utf8")
+
+for line in f:
+    word_vector = line.split()
+    word = word_vector[0]
+
+    # 100개의 값을 가지는 array로 변환
+    word_vector_arr = np.asarray(word_vector[1:], dtype='float32')
+    embedding_dict[word] = word_vector_arr
+f.close()
+
+print('%s개의 Embedding vector가 있습니다.' % len(embedding_dict))
+```
+```
+400000개의 Embedding vector가 있습니다.
+```
+임의의 단어 'respectable'에 대해서 임베딩 벡터를 출력해봅니다
+```py
+print(embedding_dict['respectable'])
+print(len(embedding_dict['respectable']))
+```
+```
+[-0.049773   0.19903    0.10585 ... 중략 ... -0.032502   0.38025  ]
+100
+```
+벡터값이 출력되며 길이는 100인 것을 확인할 수 있습니다 단어 집합 크기의 행과 100개의 열을 가지는 행렬 생성합니다 이 행렬의 값은 전부 0으로 채웁니다 이 행렬에 사전 훈련된 임베딩 값을 넣어줄 것입니다
+```py
+embedding_matrix = np.zeros((vocab_size, 100))
+np.shape(embedding_matrix)
+```
+```
+(16, 100)
+```
+```py
+print(tokenizer.word_index.items())
+```
+```
+dict_items([('nice', 1), ('great', 2), ('best', 3), ('amazing', 4), ('stop', 5), ('lies', 6), 
+('pitiful', 7), ('nerd', 8), ('excellent', 9), ('work', 10), ('supreme', 11), ('quality', 12), 
+('bad', 13), ('highly', 14), ('respectable', 15)])
+```
+
+단어 `great`의 인덱스는 2입니다 
+
+```py
+tokenizer.word_index['great']
+```
+```
+2
+```
+사전 훈련된 GloVe에서 `great`의 벡터값을 확인합니다 
+
+```py
+print(embedding_dict['great'])
+```
+```
+[-0.013786   0.38216    0.53236    0.15261   -0.29694   -0.20558
+.. 중략 ...
+ -0.69183   -1.0426     0.28855    0.63056  ]
+```
+이제 훈련 데이터의 단어 집합의 모든 단어에 대해서 사전 훈련된 GloVe의 임베딩 벡터들은 맵핑한 후에 `great`의 벡터값이 잘 들어갔는데 확인해봅시다 
+
+```py
+for word, index in tokenizer.word_index.items():
+    # 단어와 맵핑되는 사전 훈련된 임베딩 벡터값
+    vector_value = embedding_dict.get(word)
+    if vector_value is not None:
+        embedding_matrix[index] = vector_value
+```
+embedding_matrix의 인덱스 2에서의 값을 확인합니다
