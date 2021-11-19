@@ -258,3 +258,52 @@ for word, index in tokenizer.word_index.items():
         embedding_matrix[index] = vector_value
 ```
 embedding_matrix의 인덱스 2에서의 값을 확인합니다
+
+```py
+tokenizer.word_index['great']
+```
+```
+2
+```
+사전 훈련된 GloVe에서 `great`의 벡터값을 확인합니다 
+```py
+print(embedding_dict['great'])
+```
+```
+[-0.013786   0.38216    0.53236    0.15261   -0.29694   -0.20558
+.. 중략 ...
+ -0.69183   -1.0426     0.28855    0.63056  ]
+```
+이제 훈련 데이터의 단어 집합의 모든 단어에 대해서 사전훈련된 GloVe의 임베딩 벡터들을 맵핑한 후에 `great`의 벡터값이 잘 들어갔는지 확인해보겠습니다 
+```py
+for word, index in tokenizer.word_index.items():
+    # 단어와 맵핑되는 사전 훈련된 임베딩 벡터값
+    vector_value = embedding_dict.get(word)
+    if vector_value is not None:
+        embedding_matrix[index] = vector_value
+```
+embedding_matrix의 인덱스 2에서의 값을 확인합니다 
+```py
+embedding_matrix[2]
+```
+```
+array([-0.013786  ,  0.38216001,  0.53236002,  0.15261   , -0.29694   ,
+        ... 중략 ...
+       -0.39346001, -0.69182998, -1.04260004,  0.28854999,  0.63055998])
+```
+이전에 확인한 사전에 훈련된 GloVe에서의 `great`의 벡터값과 일치합니다 이제 Embedding layer에 우리가 만든 매트릭스를 초기값으로 설정해줍니다 헌재 실습에서 사전 훈련된 워드 임베딩을 100차원의 값인 것으로 사용하고 있기
+때문에 임베딩층의 output_dim의 인자값으로 100을 주어야합니다 
+
+그리고 사전 훈련된 워드 임베딩을 그래도 사용할 것이므로 별도로 더 이상 훈련을 하지 않는다는 옵션을 줍니다 이는 trainable = False로 선택할 수 있습니다 
+```py
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, Flatten
+
+model = Sequential()
+e = Embedding(vocab_size, 100, weights=[embedding_matrix], input_length=max_len, trainable=False)
+model.add(e)
+model.add(Flatten())
+model.add(Dense(1, activation='sigmoid'))
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+model.fit(X_train, y_train, epochs=100, verbose=2)
+```
