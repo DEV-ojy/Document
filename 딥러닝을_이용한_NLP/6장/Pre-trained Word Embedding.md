@@ -307,3 +307,40 @@ model.add(Dense(1, activation='sigmoid'))
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
 model.fit(X_train, y_train, epochs=100, verbose=2)
 ```
+
+### 2) 사전 훈련된 Word2Vec 사용하기
+
+```py
+import gensim
+```
+```py
+urlretrieve("https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz", \
+                           filename="GoogleNews-vectors-negative300.bin.gz")
+word2vec_model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin.gz', binary=True)
+```
+구글의 사전 훈련된 Word2Vec 모델을 로드하여  word2vec_model에 저장합니
+```py
+print(word2vec_model.vectors.shape) # 모델의 크기 확인
+```
+```
+(3000000, 300)
+```
+300의 차원을 가진 Word2Vec 벡터가 3,000,000개 있습니다
+```py
+# 단어 집합 크기의 행과 300개의 열을 가지는 행렬 생성. 값은 전부 0으로 채워진다.
+embedding_matrix = np.zeros((vocab_size, 300))
+np.shape(embedding_matrix)
+```
+```
+(16, 300)
+```
+모든 값이 0으로 채워진 임베딩 행렬을 만들어줍니다 이번 문제의 단어는 총 16개개이므로 , 16x300의 크기를 가진 행렬을 만듭니다 
+```py
+def get_vector(word):
+    if word in word2vec_model:
+        return word2vec_model[word]
+    else:
+        return None
+```
+word2vec_model에서 특정 단어를 입력하면 해당 단어의 임베딩 벡터를 리턴받을텐데, 만약 word2vec_model에 특정 단어의 임베딩 벡터가 없다면 None을 리턴하도록 합니다
+
