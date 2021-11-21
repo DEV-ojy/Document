@@ -344,3 +344,58 @@ def get_vector(word):
 ```
 word2vec_model에서 특정 단어를 입력하면 해당 단어의 임베딩 벡터를 리턴받을텐데, 만약 word2vec_model에 특정 단어의 임베딩 벡터가 없다면 None을 리턴하도록 합니다
 
+```py
+for word, index in tokenizer.word_index.items():
+    # 단어와 맵핑되는 사전 훈련된 임베딩 벡터값
+    vector_value = get_vector(word)
+    if vector_value is not None:
+        embedding_matrix[index] = vector_value
+```
+단어집합으로부터 단어를 1개씩 호출하여 word2vec_model에 해당 단어의 임베딩 벡터값이 존재하는지 확인합니다 만약 None이 아니라면 존재한다는 의미이므로 임베딩 행렬에 해당 단어의 인덱스 위치의 행에 임베딩의 값을 지정합니다 
+
+이렇게 되면 현재 풀고자하는 문제의 16개의 단어와 맵핑되는 임베딩 행렬이 완성됩니다 
+
+제대로 맵핑이 됐는지 기존 word2vec_model에 저장되어 있던 단어 `nice`의 임베딩 벡터값을 확인해봅시다
+```py
+print(word2vec_model['nice'])
+```
+```
+[ 0.15820312  0.10595703 -0.18945312  0.38671875  0.08349609 -0.26757812
+  0.08349609  0.11328125 -0.10400391  0.17871094 -0.12353516 -0.22265625
+  ... 중략 ...
+ -0.16894531 -0.08642578 -0.08544922  0.18945312 -0.14648438  0.13476562
+ -0.04077148  0.03271484  0.08935547 -0.26757812  0.00836182 -0.21386719]
+```
+이 단어 `nice`는 헌재 단어 집합에서 몇 번 인덱스를 가지는지 확인해보겠습니다 
+```py
+print('단어 nice의 정수 인덱스 :', tokenizer.word_index['nice'])
+```
+```
+단어 nice의 정수 인덱스 : 1
+```
+1의 값을 가지므로 embedding_matirx의 1번 인덱스에는 단어 'nice'의 임베딩 벡터값이 있어야합니다 
+```py
+print(embedding_matrix[1])
+```
+```
+[ 0.15820312  0.10595703 -0.18945312  0.38671875  0.08349609 -0.26757812
+  0.08349609  0.11328125 -0.10400391  0.17871094 -0.12353516 -0.22265625
+  ... 중략 ...
+ -0.16894531 -0.08642578 -0.08544922  0.18945312 -0.14648438  0.13476562
+ -0.04077148  0.03271484  0.08935547 -0.26757812  0.00836182 -0.21386719]
+```
+값이 word2vec_model에서 확인했던 것과 동일한 것을 확인할 수 있습니다 
+이제 Embedding에 사전 훈련된 embedding_matrix를 입력으로 넣어주고 모델을 학습시켜보겠습니다
+```py
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, Flatten, Input
+
+model = Sequential()
+model.add(Input(shape=(max_len,), dtype='int32'))
+e = Embedding(vocab_size, 300, weights=[embedding_matrix], input_length=max_len, trainable=False)
+model.add(e)
+model.add(Flatten())
+model.add(Dense(1, activation='sigmoid'))
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+model.fit(X_train, y_train, epochs=100, verbose=2)
+```
