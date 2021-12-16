@@ -187,6 +187,37 @@ lines = lines.loc[:, 'src':'tar']
 lines = lines[0:60000] # 6만개만 저장
 lines.sample(10)
 ```
+번역 문장에 해당되는 프랑스어 데이터는 앞서 배웠듯이 시작을 의미하는 심볼 <sos>과 종료를 의미하는 심볼 <eos>을 넣어주어야 합니다 
+여기서는 <sos>와<eos> 대신 '\t'를 시작 심볼, '\n'을 종료 심볼로 간주하여 추가합니다 
 
+```py
+lines.tar = lines.tar.apply(lambda x : '\t '+ x + ' \n')
+lines.sample(10)
+```
 
-##### 2021.12.15
+```py
+# 글자 집합 구축
+src_vocab = set()
+for line in lines.src: # 1줄씩 읽음
+    for char in line: # 1개의 글자씩 읽음
+        src_vocab.add(char)
+
+tar_vocab = set()
+for line in lines.tar:
+    for char in line:
+        tar_vocab.add(char)
+```
+글자 집합의 크기를 보겠습니다 
+
+```py
+src_vocab_size = len(src_vocab)+1
+tar_vocab_size = len(tar_vocab)+1
+print('source 문장의 char 집합 :',src_vocab_size)
+print('target 문장의 char 집합 :',tar_vocab_size)
+```
+```
+source 문장의 char 집합 : 79
+target 문장의 char 집합 : 105
+```
+
+##### 2021.12.16
