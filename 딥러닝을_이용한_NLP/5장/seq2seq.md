@@ -220,4 +220,43 @@ source 문장의 char 집합 : 79
 target 문장의 char 집합 : 105
 ```
 
+그 다음 정령하여 순서를 정해준 뒤에 인덱스를 사용하여 줍니다 
+```py
+src_vocab = sorted(list(src_vocab))
+tar_vocab = sorted(list(tar_vocab))
+```
+
+각 글자에 인덱스를 부여하겠습니다 
+
+```py
+src_to_index = dict([(word, i+1) for i, word in enumerate(src_vocab)])
+tar_to_index = dict([(word, i+1) for i, word in enumerate(tar_vocab)])
+```
+
+인덱스가 부여된 글자 집합으로부터 갖고 있는 훈련 데이터에 정수 인코딩을 수행합니다 
+우선 인코더의 입력이 될 영어 문장 샘플에 대해서 정수 인코딩을 수행하겠습니다 
+
+```py
+encoder_input = []
+
+# 1개의 문장
+for line in lines.src:
+  encoded_line = []
+  # 각 줄에서 1개의 char
+  for char in line:
+    # 각 char을 정수로 변환
+    encoded_line.append(src_to_index[char])
+  encoder_input.append(encoded_line)
+print('source 문장의 정수 인코딩 :',encoder_input[:5])
+```
+정수 인코딩을 하였으니 디코더의 입력이 될 풀아스어 데이터에 대해서 정수 인코딩을 수행하겠습니다
+```py
+decoder_input = []
+for line in lines.tar:
+  encoded_line = []
+  for char in line:
+    encoded_line.append(tar_to_index[char])
+  decoder_input.append(encoded_line)
+print('target 문장의 정수 인코딩 :',decoder_input[:5])
+```
 ##### 2021.12.16
