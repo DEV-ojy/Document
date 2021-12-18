@@ -259,4 +259,28 @@ for line in lines.tar:
   decoder_input.append(encoded_line)
 print('target 문장의 정수 인코딩 :',decoder_input[:5])
 ```
+
+패딩을 해주기 위해 먼저 영어문장과 프랑스어 문장을 각각 길이를 확인합니다 
+
+```py
+max_src_len = max([len(line) for line in lines.src])
+max_tar_len = max([len(line) for line in lines.tar])
+print('source 문장의 최대 길이 :',max_src_len)
+print('target 문장의 최대 길이 :',max_tar_len)
+```
+```
+source 문장의 최대 길이 : 23
+target 문장의 최대 길이 : 76
+```
+
+각각 23,76의 길이를 가집니다 영어는 영어샘플끼리 프랑스는 프랑스샘플끼리 패딩작업을 진행해주시면 됩니다 
+
+```py
+encoder_input = pad_sequences(encoder_input, maxlen=max_src_len, padding='post')
+decoder_input = pad_sequences(decoder_input, maxlen=max_tar_len, padding='post')
+decoder_target = pad_sequences(decoder_target, maxlen=max_tar_len, padding='post')
+```
+
+이제 데이터에 대한 전처리가 모두 끝났습니다 
+
 ##### 2021.12.16
