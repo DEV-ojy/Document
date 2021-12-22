@@ -30,18 +30,38 @@ model = TFBertForMaskedLM.from_pretrained('klue/bert-base', from_pt=True)
 tokenizer = AutoTokenizer.from_pretrained("klue/bert-base")
 ```
 
+## 2. BERT의 입력
 
+    '축구는 정말 재미있는 [MASK]다'
+라는 임의의 문장이 있다고 가정해봅시다 이를 마스크드 언어 모델의 입력으로 넣으면, 마스크드 언어 모델은 [MASK]의 위치에 해당하는 단어를 예측합니다 마스크드 언어 모델의 예측 결과를 보기위해서 klue/bert-base의 토크나이저를 사용하여 해당 문장을 정수 인코딩해봅시다
 
+```py
+inputs = tokenizer('축구는 정말 재미있는 [MASK]다.', return_tensors='tf')
+```
+토크나이저로 변환된 결과에서 input_ids를 통해 정수 인코딩 결과를 확인할 수 있습니다
 
+```py
+print(inputs['input_ids'])
+```
+```
+tf.Tensor([[   2 4713 2259 3944 6001 2259    4  809   18    3]], shape=(1, 10), dtype=int32)
+```
+토크나이저로 변환된 결과에서 token_type_ids를 통해서 문장을 구분하는 세그먼트 인코딩 결과를 확인할 수 있습니다
+```py
+print(inputs['token_type_ids'])
+```
+```
+tf.Tensor([[0 0 0 0 0 0 0 0 0 0]], shape=(1, 10), dtype=int32)
+```
+현재의 입력은 문장이 두 개가 아니라 한 개이므로 여기서는 문장 길이만큼의 0 시퀀스를 얻습니다
+약 문장이 두 개였다면 두번째 문장이 시작되는 구간부터는 1의 시퀀스가 나오게 되지만, 여기서는 해당되지 않습니다
 
+토크나이저로 변환된 결과에서 attention_mask를 통해서 실제 단어와 패딩 토큰을 구분하는 용도인 어텐션 마스크를 확인할 수 있습니다
 
-
-
-
-
-
-
-
-
-
-
+```py
+print(inputs['attention_mask'])
+```
+```
+tf.Tensor([[1 1 1 1 1 1 1 1 1 1]], shape=(1, 10), dtype=int32)
+```
+현재의 입력에서는 패딩이 없으므로 여기서는 문장 길이만큼의 1 시퀀스를 얻습니다 만약 뒤에 패딩이 있었다면 패딩이 시작되는 구간부터는 0의 시퀀스가 나오게 되지만, 여기서는 해당되지 않습니다
