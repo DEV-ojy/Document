@@ -65,3 +65,64 @@ print(inputs['attention_mask'])
 tf.Tensor([[1 1 1 1 1 1 1 1 1 1]], shape=(1, 10), dtype=int32)
 ```
 현재의 입력에서는 패딩이 없으므로 여기서는 문장 길이만큼의 1 시퀀스를 얻습니다 만약 뒤에 패딩이 있었다면 패딩이 시작되는 구간부터는 0의 시퀀스가 나오게 되지만, 여기서는 해당되지 않습니다
+
+## 3. [MASK] 토큰 예측하기
+
+FillMaskPipeline은 모델과 토크나이저를 지정하면 손쉽게 마스크드 언어 모델의 예측 결과를 정리해서 보여줍니다 FillMaskPipeline에 우선 앞서 불러온 모델과 토크나이저를 지정해줍니다 
+
+```py
+from transformers import FillMaskPipeline
+pip = FillMaskPipeline(model=model, tokenizer=tokenizer)
+```
+이제 입력 문장으로부터 [MASK]의 위치에 들어갈 수 있는 상위 5개의 후보 단어들을 출력해봅시다
+```
+pip('축구는 정말 재미있는 [MASK]다.')
+```
+```py
+[{'score': 0.8963505625724792,
+  'sequence': '축구는 정말 재미있는 스포츠 다.',
+  'token': 4559,
+  'token_str': '스포츠'},
+ {'score': 0.02595764957368374,
+  'sequence': '축구는 정말 재미있는 거 다.',
+  'token': 568,
+  'token_str': '거'},
+ {'score': 0.010033931583166122,
+  'sequence': '축구는 정말 재미있는 경기 다.',
+  'token': 3682,
+  'token_str': '경기'},
+ {'score': 0.007924391888082027,
+  'sequence': '축구는 정말 재미있는 축구 다.',
+  'token': 4713,
+  'token_str': '축구'},
+ {'score': 0.00784421805292368,
+  'sequence': '축구는 정말 재미있는 놀이 다.',
+  'token': 5845,
+  'token_str': '놀이'}]
+```
+```
+pip('어벤져스는 정말 재미있는 [MASK]다.')
+```
+```py
+[{'score': 0.8382411599159241,
+  'sequence': '어벤져스는 정말 재미있는 영화 다.',
+  'token': 3771,
+  'token_str': '영화'},
+ {'score': 0.028275618329644203,
+  'sequence': '어벤져스는 정말 재미있는 거 다.',
+  'token': 568,
+  'token_str': '거'},
+ {'score': 0.017189407721161842,
+  'sequence': '어벤져스는 정말 재미있는 드라마 다.',
+  'token': 4665,
+  'token_str': '드라마'},
+ {'score': 0.014989694580435753,
+  'sequence': '어벤져스는 정말 재미있는 이야기 다.',
+  'token': 3758,
+  'token_str': '이야기'},
+ {'score': 0.009382619522511959,
+  'sequence': '어벤져스는 정말 재미있는 장소 다.',
+  'token': 4938,
+  'token_str': '장소'}]
+```
+
